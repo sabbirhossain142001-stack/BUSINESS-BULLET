@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All-in-One Firebase Store</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+body { margin:0; font-family:Arial; background:#f4f6fb; }
+
+header {
+    background:#0d47a1;
+    color:white;
+    text-align:center;
+    padding:20px;
+}
+
+.container { max-width:1000px; margin:auto; padding:20px; }
+
+.card {
+    background:white;
+    padding:15px;
+    margin:10px 0;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+input, button {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border-radius:6px;
+}
+
+button {
+    background:#1877f2;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+.product {
+    border-bottom:1px solid #ddd;
+    padding:10px 0;
+}
+
+.buy {
+    background:#25D366;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🔥 My Firebase Store</h1>
+<p>Admin + Shop + Cart + WhatsApp</p>
+</header>
+
+<div class="container">
+
+<!-- ADMIN -->
+<div class="card">
+<h2>Admin Panel</h2>
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<input id="img" placeholder="Image URL">
+<button onclick="addProduct()">Add Product</button>
+</div>
+
+<!-- PRODUCTS -->
+<div class="card">
+<h2>Products</h2>
+<div id="products"></div>
+</div>
+
+<!-- CART -->
+<div class="card">
+<h2>Cart</h2>
+<div id="cart"></div>
+<h3>Total: ৳<span id="total">0</span></h3>
+<button onclick="checkout()" class="buy">Checkout WhatsApp</button>
+</div>
+
+</div>
+
+<script>
+
+// 🔥 YOUR FIREBASE CONFIG (PASTE YOUR OWN)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// CART
+let cart = [];
+let total = 0;
+
+// ➕ ADD PRODUCT
+function addProduct(){
+    let name = nameInput.value;
+    let price = priceInput.value;
+    let img = imgInput.value;
+
+    db.collection("products").add({ name, price, img });
+
+    alert("Product Added!");
+}
+
+// INPUTS
+let nameInput = document.getElementById("name");
+let priceInput = document.getElementById("price");
+let imgInput = document.getElementById("img");
+
+// 📦 LOAD PRODUCTS
+db.collection("products").onSnapshot(snapshot => {
+    let box = document.getElementById("products");
+    box.innerHTML = "";
+
+    snapshot.forEach(doc => {
+        let p = doc.data();
+
+        box.innerHTML += `
+        <div class="product">
+            <img src="${p.img}" width="100%">
+            <h3>${p.name}</h3>
+            <p>৳${p.price}</p>
+            <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+        </div>
+        `;
+    });
+});
+
+// 🛒 ADD TO CART
+function addToCart(name, price){
+    cart.push({name, price});
+    total += price;
+    updateCart();
+}
+
+function updateCart(){
+    let box = document.getElementById("cart");
+    box.innerHTML = "";
+
+    cart.forEach(i => {
+        box.innerHTML += `<p>${i.name} - ৳${i.price}</p>`;
+    });
+
+    document.getElementById("total").innerText = total;
+}
+
+// 💬 CHECKOUT
+function checkout(){
+    if(cart.length === 0){
+        alert("Cart empty!");
+        return;
+    }
+
+    let msg = "🛒 New Order:%0A";
+
+    cart.forEach(i => {
+        msg += i.name + " - " + i.price + "%0A";
+    });
+
+    msg += "Total: " + total;
+
+    window.open("https://wa.me/8801744145263?text=" + msg, "_blank");
+}
+
+</script>
+
+</body>
+</html>
